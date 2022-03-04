@@ -20,7 +20,9 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: const LoginPage(),
+      home: (FirebaseAuth.instance.currentUser != null)
+          ? UserProfile()
+          : LoginPage(),
     );
   }
 }
@@ -34,8 +36,14 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    FirebaseService service = new FirebaseService();
+    // FirebaseService service = new FirebaseService();
     return Scaffold(
       appBar: AppBar(
         title: Text("Login with google"),
@@ -44,14 +52,49 @@ class _LoginPageState extends State<LoginPage> {
           child: ElevatedButton(
               onPressed: () {
                 try {
-                  service.signInwithGoogle().then((value) {
-                    print(FirebaseAuth.instance.currentUser);
+                  signInWithGoogle().then((value) {
+                    Navigator.of(context).push(MaterialPageRoute(
+                      builder: (context) => UserProfile(),
+                    ));
                   });
                 } catch (e) {
                   print(e);
                 }
               },
               child: Text("Login With Google"))),
+    );
+  }
+}
+
+// ignore: use_key_in_widget_constructors
+class UserProfile extends StatefulWidget {
+  @override
+  State<UserProfile> createState() => _UserProfileState();
+}
+
+class _UserProfileState extends State<UserProfile> {
+  User user = FirebaseAuth.instance.currentUser!;
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(user.displayName!),
+            Text(user.email!),
+            ElevatedButton(
+                onPressed: () {
+                  signOutWithGoogle();
+                  Navigator.of(context)
+                      .push(MaterialPageRoute(builder: (context) {
+                    return LoginPage();
+                  }));
+                },
+                child: Text("Log out"))
+          ],
+        ),
+      ),
     );
   }
 }
